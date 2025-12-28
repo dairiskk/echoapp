@@ -2,55 +2,53 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { postSentence, fetchPosts } from "../lib/supabase";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function TodayPage() {
   const [sentence, setSentence] = useState("");
   const [posted, setPosted] = useState(false);
   const [error, setError] = useState("");
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Fetch posts from Supabase on mount
-  useEffect(() => {
-    async function loadPosts() {
-      setLoading(true);
+  const queryClient = useQueryClient();
+
+  const {
+    data: posts,
+    isLoading: loading,
+    isError,
+    error: fetchError,
+  } = useQuery({
+    queryKey: ["posts"],
+    queryFn: async () => {
       const { data, error } = await fetchPosts();
-      if (!error && data) {
-        setPosts(data);
-        if (data.length === 0) {
-          console.log("No posts found in Supabase.");
-        } else {
-          console.log("Fetched posts:", data);
-        }
-      } else {
-        console.error("Error fetching posts:", error);
-      }
-      setLoading(false);
-    }
-    loadPosts();
-  }, []);
+      if (error) throw new Error(error.message || "Failed to fetch posts");
+      return data;
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (sentence: string) => {
+      const { error } = await postSentence(sentence);
+      if (error) throw new Error(error.message || "Failed to post");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      setPosted(true);
+    },
+    onError: (err: any) => {
+      setError(err.message || "Failed to post. Try again.");
+    },
+  });
 
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (sentence.length < 1 || sentence.length > 200) {
       setError("Your sentence must be 1–200 characters.");
       return;
     }
-    // Post to Supabase
-    const { error } = await postSentence(sentence);
-    if (error) {
-      setError("Failed to post. Try again.");
-      return;
-    }
-    // Re-fetch posts after posting
-    const { data } = await fetchPosts();
-    if (data) {
-      setPosts(data);
-    }
-    setPosted(true);
+    mutation.mutate(sentence);
   }
 
   return (
@@ -151,31 +149,29 @@ export default function TodayPage() {
               }}
             />
           ))
-        ) : (
-          posts.map((post, idx) => {
-            return (
-              <div
-                key={post.id || idx}
-                style={{
-                  fontSize: 20,
-                  lineHeight: 1.5,
-                  fontWeight: 400,
-                  padding: "0",
-                  border: "none",
-                  background: "none",
-                  color: "var(--foreground)",
-                  opacity: 0.95,
-                }}
-              >
-                <div>{post.sentence}</div>
-                <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
-                  {post.created_at ? new Date(post.created_at).toLocaleString() : ""}
-                  {post.user_id ? ` · user: ${post.user_id}` : ""}
-                </div>
+        ) : posts && Array.isArray(posts) ? (
+          posts.map((post, idx) => (
+            <div
+              key={post.id || idx}
+              style={{
+                fontSize: 20,
+                lineHeight: 1.5,
+                fontWeight: 400,
+                padding: "0",
+                border: "none",
+                background: "none",
+                color: "var(--foreground)",
+                opacity: 0.95,
+              }}
+            >
+              <div>{post.sentence}</div>
+              <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
+                {post.created_at ? new Date(post.created_at).toLocaleString() : ""}
+                {post.user_id ? ` · user: ${post.user_id}` : ""}
               </div>
-            );
-          })
-        )}
+            </div>
+          ))
+        ) : null}
       </section>
       <style jsx global>{`
       @keyframes pulse {
