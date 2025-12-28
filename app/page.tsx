@@ -1,65 +1,56 @@
 
 
 "use client";
+
 import { useState, useRef, useEffect } from "react";
+import { postSentence, fetchPosts } from "../lib/supabase";
 
 export default function TodayPage() {
   const [sentence, setSentence] = useState("");
   const [posted, setPosted] = useState(false);
   const [error, setError] = useState("");
-  const [sentences, setSentences] = useState([
-    "Today I felt calm and present.",
-    "I watched the rain and thought about nothing.",
-    "Shared a quiet moment with my cat.",
-    "Read a book in silence.",
-    "Let go of a worry.",
-    "Enjoyed a walk without my phone.",
-    "Cooked a simple meal.",
-    "Listened to the wind.",
-    "Wrote a sentence for today.",
-    "Paused and breathed.",
-  ]);
-  const [heard, setHeard] = useState(false);
-  const ownSentenceRef = useRef<HTMLDivElement | null>(null);
-
-  // Mock pause detection: if own sentence is visible for 5s, show acknowledgment
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Fetch posts from Supabase on mount
   useEffect(() => {
-    if (!posted || heard || !ownSentenceRef.current) return;
-    let timer: NodeJS.Timeout | null = null;
-    function checkVisibility() {
-      const el = ownSentenceRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const visible = rect.top < vh * 0.7 && rect.bottom > vh * 0.3;
-      if (visible && document.visibilityState === "visible") {
-        timer = setTimeout(() => setHeard(true), 5000);
+    async function loadPosts() {
+      setLoading(true);
+      const { data, error } = await fetchPosts();
+      if (!error && data) {
+        setPosts(data);
+        if (data.length === 0) {
+          console.log("No posts found in Supabase.");
+        } else {
+          console.log("Fetched posts:", data);
+        }
       } else {
-        if (timer) clearTimeout(timer);
+        console.error("Error fetching posts:", error);
       }
+      setLoading(false);
     }
-    window.addEventListener("scroll", checkVisibility);
-    window.addEventListener("resize", checkVisibility);
-    document.addEventListener("visibilitychange", checkVisibility);
-    checkVisibility();
-    return () => {
-      window.removeEventListener("scroll", checkVisibility);
-      window.removeEventListener("resize", checkVisibility);
-      document.removeEventListener("visibilitychange", checkVisibility);
-      if (timer) clearTimeout(timer);
-    };
-  }, [posted, heard]);
+    loadPosts();
+  }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (sentence.length < 1 || sentence.length > 200) {
       setError("Your sentence must be 1–200 characters.");
       return;
     }
-    setSentences([sentence, ...sentences]);
+    // Post to Supabase
+    const { error } = await postSentence(sentence);
+    if (error) {
+      setError("Failed to post. Try again.");
+      return;
+    }
+    // Re-fetch posts after posting
+    const { data } = await fetchPosts();
+    if (data) {
+      setPosts(data);
+    }
     setPosted(true);
-    // Here you would call the real API
   }
 
   return (
@@ -146,33 +137,53 @@ export default function TodayPage() {
           gap: 24,
         }}
       >
-        {sentences.map((s, idx) => {
-          const isOwn = posted && idx === 0 && s === sentence;
-          return (
+        {loading ? (
+          Array.from({ length: 5 }).map((_, idx) => (
             <div
-              key={idx}
-              ref={isOwn ? ownSentenceRef : undefined}
+              key={"skeleton-" + idx}
               style={{
-                fontSize: 20,
-                lineHeight: 1.5,
-                fontWeight: 400,
-                padding: "0",
-                border: "none",
-                background: "none",
-                color: "var(--foreground)",
-                opacity: isOwn ? 1 : 0.95,
+                height: 32,
+                borderRadius: 8,
+                background: "#222",
+                opacity: 0.2,
+                marginBottom: 8,
+                animation: "pulse 1.2s infinite ease-in-out",
               }}
-            >
-              {s}
-              {isOwn && heard && (
-                <div style={{ color: "#4ade80", fontSize: 15, marginTop: 6 }}>
-                  Your sentence was read.
+            />
+          ))
+        ) : (
+          posts.map((post, idx) => {
+            return (
+              <div
+                key={post.id || idx}
+                style={{
+                  fontSize: 20,
+                  lineHeight: 1.5,
+                  fontWeight: 400,
+                  padding: "0",
+                  border: "none",
+                  background: "none",
+                  color: "var(--foreground)",
+                  opacity: 0.95,
+                }}
+              >
+                <div>{post.sentence}</div>
+                <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
+                  {post.created_at ? new Date(post.created_at).toLocaleString() : ""}
+                  {post.user_id ? ` · user: ${post.user_id}` : ""}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })
+        )}
       </section>
+      <style jsx global>{`
+      @keyframes pulse {
+        0% { opacity: 0.2; }
+        50% { opacity: 0.5; }
+        100% { opacity: 0.2; }
+      }
+      `}</style>
       <div
         style={{
           marginTop: 48,

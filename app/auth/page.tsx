@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { getSupabaseClient } from "../../lib/supabase";
 
+//console.log("ENV VARS (process.env):", process.env);
+
 export default function AuthPage() {
+    console.log('RENDER');
     const [email, setEmail] = useState("");
     const [sent, setSent] = useState(false);
     const [error, setError] = useState("");
@@ -14,10 +17,16 @@ export default function AuthPage() {
         setSent(false);
         try {
             const supabase = getSupabaseClient();
-            const { error } = await supabase.auth.signInWithOtp({ email });
-            if (error) throw error;
+            console.log("Supabase client:", supabase);
+            console.log("Email submitted:", email);
+            const payload = { email };
+            console.log("Sending to Supabase:", payload);
+            const response = await supabase.auth.signInWithOtp(payload);
+            console.log("Supabase signInWithOtp response:", response);
+            if (response.error) throw response.error;
             setSent(true);
         } catch (err: any) {
+            console.error("Magic link error:", err);
             setError("Failed to send magic link. Try again.");
         }
     }
