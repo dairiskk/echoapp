@@ -55,7 +55,17 @@ export default function AuthPage() {
     }
 
     return (
-        <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)', color: 'var(--foreground)', position: 'relative' }}>
+        <main style={{
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--background)',
+            color: 'var(--foreground)',
+            position: 'relative',
+            overflow: 'hidden',
+        }}>
             {showInstall && (
                 <button
                     onClick={handleInstallClick}
