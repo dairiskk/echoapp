@@ -48,25 +48,27 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     if (!authenticated) return null;
     return (
         <>
-            <button
-                onClick={handleSignOut}
-                style={{
-                    position: "fixed",
-                    top: 16,
-                    right: 16,
-                    zIndex: 100,
-                    padding: "8px 16px",
-                    background: "#222",
-                    color: "#ededed",
-                    border: "none",
-                    borderRadius: 6,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    opacity: 0.85,
-                }}
-            >
-                Sign out
-            </button>
+            {pathname !== "/auth" && (
+                <button
+                    onClick={handleSignOut}
+                    style={{
+                        position: "fixed",
+                        top: 16,
+                        right: 16,
+                        zIndex: 100,
+                        padding: "8px 16px",
+                        background: "#222",
+                        color: "#ededed",
+                        border: "none",
+                        borderRadius: 6,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        opacity: 0.85,
+                    }}
+                >
+                    Sign out
+                </button>
+            )}
             {children}
         </>
     );
