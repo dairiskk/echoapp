@@ -1,9 +1,9 @@
 
 
+
 "use client";
 
-// ...existing code...
-import { useState } from "react";
+import React, { useState } from "react";
 import { usePosts } from "./hooks/usePosts";
 
 export default function TodayPage() {
