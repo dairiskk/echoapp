@@ -15,7 +15,7 @@ export default function AuthPage() {
 
     // Listen for beforeinstallprompt event
     React.useEffect(() => {
-        const handler = (e) => {
+        const handler = (e: any) => {
             e.preventDefault();
             setDeferredPrompt(e);
             setShowInstall(true);
