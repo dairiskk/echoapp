@@ -16,10 +16,6 @@ export default function TodayPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (sentence.length < 1 || sentence.length > 200) {
-      setError("Your sentence must be 1–200 characters.");
-      return;
-    }
     postMutation.mutate(sentence, {
       onSuccess: () => setPosted(true),
       onError: (err: any) => setError(err.message || "Failed to post. Try again."),
@@ -92,23 +88,22 @@ export default function TodayPage() {
         />
         <button
           type="submit"
-          disabled={posted}
           style={{
             padding: "13px 0",
-            background: posted ? "#444" : "#2563eb",
+            background: "#2563eb",
             color: "#ededed",
             borderRadius: 8,
             fontWeight: 600,
             fontSize: 17,
             border: "none",
-            cursor: posted ? "not-allowed" : "pointer",
-            opacity: posted ? 0.7 : 1,
+            cursor: "pointer",
+            opacity: 1,
             transition: "background 0.2s",
             marginTop: 2,
-            boxShadow: posted ? "none" : "0 1px 6px 0 rgba(37,99,235,0.08)",
+            boxShadow: "0 1px 6px 0 rgba(37,99,235,0.08)",
           }}
         >
-          {posted ? "You’ve said enough for today." : "Submit sentence"}
+          Submit sentence
         </button>
         {error && <div style={{ color: "#f87171", fontSize: 15, marginTop: 2 }}>{error}</div>}
       </form>
@@ -182,17 +177,7 @@ export default function TodayPage() {
         }
       }
       `}</style>
-      <div
-        style={{
-          marginTop: 40,
-          fontSize: 16,
-          color: "#888",
-          textAlign: "center",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        That’s enough for today.
-      </div>
+      {/* Removed daily post restriction message */}
     </main>
   );
 }
