@@ -20,9 +20,9 @@ jobs:
       - name: Push migrations
         id: dbpush
         env:
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          supabase db push > dbpush.log 2>&1
+          supabase db push --db-url "$SUPABASE_DB_URL" > dbpush.log 2>&1
           cat dbpush.log
       - name: Log DB update status
         if: success()
