@@ -19,6 +19,8 @@ jobs:
         run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
       - name: Push migrations
         id: dbpush
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           supabase db push > dbpush.log 2>&1
           cat dbpush.log
