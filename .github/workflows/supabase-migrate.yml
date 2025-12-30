@@ -30,6 +30,12 @@ jobs:
           else
             echo 'Database was updated with new migrations!'
           fi
-            - name: Show migration errors if failed
-              if: failure()
-              run: cat dbpush.log
+      - name: Show migration errors if failed
+        if: failure()
+        run: cat dbpush.log
+      - name: Upload dbpush.log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbpush-log
+          path: dbpush.log
