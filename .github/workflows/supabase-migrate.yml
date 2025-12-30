@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Supabase CLI
-        run: curl -sL https://github.com/supabase/cli/releases/latest/download/supabase-cli-linux-amd64 -o supabase && chmod +x supabase && sudo mv supabase /usr/local/bin/
+        uses: supabase/setup-cli@v1
       - name: Login to Supabase CLI
         run: supabase login --token ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       - name: Link to Supabase project
