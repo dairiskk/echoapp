@@ -1,3 +1,6 @@
+      - name: Show migration errors if failed
+        if: failure()
+        run: cat dbpush.log
 name: Deploy Supabase Migrations
 
 on:
